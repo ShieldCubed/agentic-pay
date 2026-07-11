@@ -1,0 +1,33 @@
+{
+  "name": "agentic-pay",
+  "version": "0.1.0",
+  "description": "Cross-platform agentic payment engine for AI agents. Supports BTC, ETH, USDT, USDC, XRP, XMR, ZEC.",
+  "license": "BUSL-1.1",
+  "type": "commonjs",
+  "main": "core/railManager.js",
+  "bin": {
+    "agentic-pay": "cli/index.js"
+  },
+  "scripts": {
+    "start:rest": "node server/restApi.js",
+    "start:mcp": "node server/mcpServer.mjs",
+    "start:web": "node server/staticWeb.js",
+    "cli": "node cli/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "bitcoinjs-lib": "^6.1.6",
+    "coinselect": "^3.1.13",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "ecpair": "^2.1.0",
+    "ethers": "^6.13.4",
+    "express": "^4.21.1",
+    "tiny-secp256k1": "^2.2.3",
+    "xrpl": "^4.1.0",
+    "zod": "^3.23.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
