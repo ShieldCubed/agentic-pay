@@ -1,0 +1,59 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ShieldCubed/agentic-pay",
+  "title": "agentic-pay",
+  "description": "Non-custodial payment engine for AI agents. Send and receive BTC, ETH, USDT, USDC, XRP, XMR, and ZEC, with built-in per-agent spend limits and human-confirmation thresholds.",
+  "websiteUrl": "https://aumnium.tech/agentic-pay",
+  "repository": {
+    "url": "https://github.com/ShieldCubed/agentic-pay",
+    "source": "github"
+  },
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@shieldcubed/agentic-pay",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "AGENTIC_PAY_AGENT_ID",
+          "description": "Identifier for this agent, used to look up its spend-limit policy in config.json.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "AGENTIC_PAY_CONFIG",
+          "description": "Absolute path to your config.json (spend limits, API keys, static prices). Defaults to config/config.json in the install directory.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "BTC_WIF",
+          "description": "WIF-encoded Bitcoin private key for the funding wallet. Only required if using the BTC rail.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "ETH_RPC_URL",
+          "description": "EVM JSON-RPC endpoint URL. Only required if using the ETH/USDT/USDC rails.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "ETH_PRIVATE_KEY",
+          "description": "0x-prefixed Ethereum private key for the funding wallet. Only required if using the ETH/USDT/USDC rails.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

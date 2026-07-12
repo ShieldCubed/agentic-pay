@@ -1,12 +1,14 @@
 {
-  "name": "agentic-pay",
-  "version": "0.1.0",
+  "name": "@shieldcubed/agentic-pay",
+  "version": "0.1.1",
   "description": "Cross-platform agentic payment engine for AI agents. Supports BTC, ETH, USDT, USDC, XRP, XMR, ZEC.",
   "license": "BUSL-1.1",
+  "mcpName": "io.github.ShieldCubed/agentic-pay",
   "type": "commonjs",
   "main": "core/railManager.js",
   "bin": {
-    "agentic-pay": "cli/index.js"
+    "agentic-pay": "cli/index.js",
+    "agentic-pay-mcp": "server/mcpServer.mjs"
   },
   "scripts": {
     "start:rest": "node server/restApi.js",
@@ -29,5 +31,10 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ShieldCubed/agentic-pay.git"
+  },
+  "homepage": "https://aumnium.tech/agentic-pay"
 }

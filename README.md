@@ -104,4 +104,4 @@ agentic-pay is licensed under the **Business Source License 1.1** (see
   License 2.0 — fully open source, no restrictions.
 
 Want a commercial license for a hosted/managed offering before then?
-Contact licensing@aumnium.tech.
+Contact team@spacenet.network.
