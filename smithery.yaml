@@ -1,0 +1,34 @@
+runtime: node
+
+startCommand:
+  type: stdio
+  command: node
+  args:
+    - server/mcpServer.mjs
+
+configSchema:
+  type: object
+  properties:
+    AGENTIC_PAY_AGENT_ID:
+      type: string
+      description: "Identifier for this agent, used to look up its spend-limit policy in config.json."
+    AGENTIC_PAY_CONFIG:
+      type: string
+      description: "Absolute path to your config.json (spend limits, API keys, static prices). Defaults to config/config.json in the install directory."
+    BTC_WIF:
+      type: string
+      description: "WIF-encoded Bitcoin private key for the funding wallet. Only required if using the BTC rail."
+    ETH_RPC_URL:
+      type: string
+      description: "EVM JSON-RPC endpoint URL. Only required if using the ETH/USDT/USDC rails."
+    ETH_PRIVATE_KEY:
+      type: string
+      description: "0x-prefixed Ethereum private key for the funding wallet. Only required if using the ETH/USDT/USDC rails."
+  required: []
+
+metadata:
+  name: agentic-pay
+  displayName: agentic-pay
+  description: "Non-custodial payment engine for AI agents — BTC, ETH, USDT, USDC, XRP, XMR, ZEC."
+  homepage: https://aumnium.tech/agentic-pay
+  repository: https://github.com/ShieldCubed/agentic-pay
