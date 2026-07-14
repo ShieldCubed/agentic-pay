@@ -1,4 +1,5 @@
-# Agentic Pay
+# Agentic Pay    <img width="512" height="512" alt="agentic-pay-avatar" src="https://github.com/user-attachments/assets/209da2e6-5754-4198-824f-06e6f9df44f4" />
+
 
 A cross-platform payment engine that lets third-party AI agents send and
 receive payments over seven crypto rails: **BTC, ETH, USDT, USDC, XRP,
@@ -105,3 +106,5 @@ agentic-pay is licensed under the **Business Source License 1.1** (see
 
 Want a commercial license for a hosted/managed offering before then?
 Contact team@spacenet.network.
+
+
