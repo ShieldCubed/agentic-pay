@@ -1,0 +1,59 @@
+{
+  "manifest_version": "0.1",
+  "name": "agentic-pay",
+  "version": "0.1.1",
+  "description": "Non-custodial payment engine for AI agents — BTC, ETH, USDT, USDC, XRP, XMR, ZEC.",
+  "author": {
+    "name": "ShieldCubed",
+    "url": "https://aumnium.tech"
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "server/mcpServer.mjs",
+    "mcp_config": {
+      "command": "node",
+      "args": ["server/mcpServer.mjs"],
+      "env": {
+        "AGENTIC_PAY_AGENT_ID": "${user_config.agentic_pay_agent_id}",
+        "AGENTIC_PAY_CONFIG": "${user_config.agentic_pay_config}",
+        "BTC_WIF": "${user_config.btc_wif}",
+        "ETH_RPC_URL": "${user_config.eth_rpc_url}",
+        "ETH_PRIVATE_KEY": "${user_config.eth_private_key}"
+      }
+    }
+  },
+  "user_config": {
+    "agentic_pay_agent_id": {
+      "type": "string",
+      "title": "Agent ID",
+      "description": "Identifier for this agent, used to look up its spend-limit policy in config.json.",
+      "required": false
+    },
+    "agentic_pay_config": {
+      "type": "string",
+      "title": "Config path",
+      "description": "Absolute path to your config.json (spend limits, API keys, static prices). Defaults to config/config.json in the install directory.",
+      "required": false
+    },
+    "btc_wif": {
+      "type": "string",
+      "title": "BTC WIF key",
+      "description": "WIF-encoded Bitcoin private key for the funding wallet. Only required if using the BTC rail.",
+      "sensitive": true,
+      "required": false
+    },
+    "eth_rpc_url": {
+      "type": "string",
+      "title": "ETH RPC URL",
+      "description": "EVM JSON-RPC endpoint URL. Only required if using the ETH/USDT/USDC rails.",
+      "required": false
+    },
+    "eth_private_key": {
+      "type": "string",
+      "title": "ETH private key",
+      "description": "0x-prefixed Ethereum private key for the funding wallet. Only required if using the ETH/USDT/USDC rails.",
+      "sensitive": true,
+      "required": false
+    }
+  }
+}
