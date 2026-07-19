@@ -60,6 +60,19 @@ function requireAuth(req, res, next) {
   next();
 }
 
+// --- Admin auth (separate keyspace from per-agent apiKeys) -------------
+// For internal dashboards/tooling only. Admin keys see ALL agents' data,
+// unscoped by agentId. Configure in config/config.json -> adminApiKeys.
+function requireAdminAuth(req, res, next) {
+  const key = req.header('x-api-key');
+  const cfg = limits.loadPolicy();
+  const adminKeys = cfg.adminApiKeys || [];
+  if (!key || !adminKeys.includes(key)) {
+    return res.status(401).json({ error: 'Missing or invalid admin x-api-key header.' });
+  }
+  next();
+}
+
 // --- Routes ------------------------------------------------------------
 
 app.get('/v1/rails', (req, res) => {
@@ -118,6 +131,49 @@ app.post('/v1/send', requireAuth, async (req, res) => {
     }
     res.status(400).json({ error: err.message });
   }
+});
+
+// --- Admin routes (unscoped, for internal dashboard use only) ----------
+const ledger = require('../core/ledger');
+const depositVerifier = require('../core/depositVerifier');
+const balances = require('../core/balances');
+
+app.get('/v1/admin/ledger', requireAdminAuth, (req, res) => {
+  const { agentId, since } = req.query;
+  const payments = ledger.listPayments({ agentId, since });
+  res.json({ count: payments.length, payments });
+});
+
+app.get('/v1/admin/invoices', requireAdminAuth, (req, res) => {
+  const { agentId, since, status } = req.query;
+  const invoices = ledger.listInvoices({ agentId, since, status });
+  res.json({ count: invoices.length, invoices });
+});
+
+app.get('/v1/admin/policy', requireAdminAuth, (req, res) => {
+  const cfg = limits.loadPolicy();
+  // Never leak secrets: strip apiKeys/adminApiKeys before returning.
+  const { apiKeys, adminApiKeys, ...safeConfig } = cfg;
+  res.json(safeConfig);
+});
+
+// --- Custodial deposit routes -------------------------------------------
+app.post('/v1/deposit/claim', requireAuth, async (req, res) => {
+  try {
+    const { txHash } = req.body;
+    const result = await depositVerifier.verifyAndCreditDeposit({ agentId: req.agentId, txHash });
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.get('/v1/deposit/address', requireAuth, (req, res) => {
+  res.json({ depositAddress: depositVerifier.depositWalletAddress(), asset: 'USDC' });
+});
+
+app.get('/v1/balance-custodial', requireAuth, (req, res) => {
+  res.json({ agentId: req.agentId, balanceUsdc: balances.getBalance(req.agentId) });
 });
 
 const PORT = process.env.PORT || 8787;
