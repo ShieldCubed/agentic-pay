@@ -1,28 +1,35 @@
 {
-  "_comment": "Copy this file to config.json and edit. This is the spend-limit policy and API key registry — the most important file to get right before letting any agent send real funds.",
-
+  "_comment": "Copy this file to config.json and edit. This is the spend-limit policy and API key registry \u2014 the most important file to get right before letting any agent send real funds.",
   "apiKeys": {
     "sk-agent-replace-me": "example-agent-1"
   },
-
   "defaultPolicy": {
     "perTxCapUsd": 50,
     "dailyCapUsd": 200,
     "confirmationFloorUsd": 25,
-    "allowedAssets": ["BTC", "ETH", "USDT", "USDC", "XRP", "XMR", "ZEC"]
+    "allowedAssets": [
+      "BTC",
+      "ETH",
+      "USDT",
+      "USDC",
+      "XRP",
+      "XMR",
+      "ZEC"
+    ]
   },
-
   "agentPolicies": {
     "example-agent-1": {
       "perTxCapUsd": 100,
       "dailyCapUsd": 500,
       "confirmationFloorUsd": 50,
-      "allowedAssets": ["USDC", "XRP"],
+      "allowedAssets": [
+        "USDC",
+        "XRP"
+      ],
       "allowlistAddresses": null
     }
   },
-
-  "_staticPricesUsd_comment": "Used only for the built-in USD-equivalent spend-limit check. These are NOT live prices — replace railManager.priceUsd() with a real price feed before production use, or update these numbers regularly.",
+  "_staticPricesUsd_comment": "Used only for the built-in USD-equivalent spend-limit check. These are NOT live prices \u2014 replace railManager.priceUsd() with a real price feed before production use, or update these numbers regularly.",
   "staticPricesUsd": {
     "BTC": 65000,
     "ETH": 3200,
@@ -31,5 +38,45 @@
     "XRP": 0.55,
     "XMR": 160,
     "ZEC": 30
+  },
+  "priceFeed": {
+    "enabled": true,
+    "cacheTtlSeconds": 60
+  },
+  "alerts": {
+    "slackWebhookUrl": null,
+    "email": {
+      "enabled": false,
+      "smtpHost": null,
+      "smtpPort": 587,
+      "smtpUser": null,
+      "smtpPass": null,
+      "from": null,
+      "to": null
+    },
+    "notifyOn": [
+      "send_success",
+      "confirmation_required",
+      "policy_violation"
+    ]
+  },
+  "orgs": {
+    "example-org": {
+      "name": "Example Org",
+      "agentIds": [
+        "example-agent-1"
+      ],
+      "orgDailyCapUsd": 1000
+    }
+  },
+  "adminApiKeys": [
+    "sk-admin-replace-me"
+  ],
+  "custodialMode": false,
+  "networkFeeEstimatesUsd": {
+    "BTC": 1.5,
+    "XRP": 0.01,
+    "XMR": 0.05,
+    "ZEC": 0.05
   }
 }

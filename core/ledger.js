@@ -73,6 +73,16 @@ function getInvoice(invoiceId) {
   return db.invoices[invoiceId] || null;
 }
 
+function listInvoices({ agentId, since, status } = {}) {
+  const db = read();
+  return Object.values(db.invoices).filter((inv) => {
+    if (agentId && inv.agentId !== agentId) return false;
+    if (status && inv.status !== status) return false;
+    if (since && new Date(inv.createdAt) < new Date(since)) return false;
+    return true;
+  });
+}
+
 /**
  * Idempotent payment recording. If a payment with the same idempotencyKey
  * already exists, its recorded result is returned instead of re-sending —
@@ -110,6 +120,7 @@ module.exports = {
   createInvoice,
   markInvoicePaid,
   getInvoice,
+  listInvoices,
   recordPayment,
   getPayment,
   listPayments,

@@ -23,6 +23,7 @@
 const fs = require('fs');
 const path = require('path');
 const ledger = require('./ledger');
+const alerts = require('./alerts');
 
 const CONFIG_PATH = process.env.AGENTIC_PAY_CONFIG ||
   path.join(__dirname, '..', 'config', 'config.json');
@@ -57,24 +58,56 @@ function dailySpendUsd(agentId) {
 }
 
 /**
+ * Returns { orgId, name, agentIds, orgDailyCapUsd } for the org that
+ * `agentId` belongs to, or null if the agent isn't part of any org.
+ * Orgs are configured in config.json under "orgs" -> orgId -> { agentIds, ... }.
+ */
+function orgFor(agentId) {
+  const cfg = loadPolicy();
+  const orgs = cfg.orgs || {};
+  for (const [orgId, org] of Object.entries(orgs)) {
+    if ((org.agentIds || []).includes(agentId)) {
+      return { orgId, ...org };
+    }
+  }
+  return null;
+}
+
+/**
+ * Rolling 24h USD spend summed across every agent belonging to orgId.
+ * This is independent of, and additive to, each agent's own per-agent cap.
+ */
+function orgDailySpendUsd(orgId) {
+  const cfg = loadPolicy();
+  const org = (cfg.orgs || {})[orgId];
+  if (!org) return 0;
+  return (org.agentIds || []).reduce((sum, agentId) => sum + dailySpendUsd(agentId), 0);
+}
+
+/**
  * Throws if the requested send violates policy. Returns
  * { requiresConfirmation: boolean } if it's within policy.
  */
 function checkSend({ agentId, asset, usdEquivalent, toAddress, confirmed }) {
+  const cfg = loadPolicy();
   const policy = policyFor(agentId);
+  const alertsCfg = cfg.alerts;
+
+  const violate = (message) => {
+    alerts.notify('policy_violation', { agentId, asset, usdEquivalent, toAddress, message }, alertsCfg).catch(() => {});
+    throw new Error(message);
+  };
 
   if (policy.allowedAssets && !policy.allowedAssets.includes(asset)) {
-    throw new Error(`Policy violation: agent "${agentId}" is not permitted to send ${asset}.`);
+    violate(`Policy violation: agent "${agentId}" is not permitted to send ${asset}.`);
   }
 
   if (policy.allowlistAddresses && !policy.allowlistAddresses.includes(toAddress)) {
-    throw new Error(
-      `Policy violation: destination address is not on agent "${agentId}"'s allowlist.`
-    );
+    violate(`Policy violation: destination address is not on agent "${agentId}"'s allowlist.`);
   }
 
   if (usdEquivalent > policy.perTxCapUsd) {
-    throw new Error(
+    violate(
       `Policy violation: ${usdEquivalent} USD exceeds per-transaction cap of ` +
       `${policy.perTxCapUsd} USD for agent "${agentId}".`
     );
@@ -82,15 +115,28 @@ function checkSend({ agentId, asset, usdEquivalent, toAddress, confirmed }) {
 
   const spentToday = dailySpendUsd(agentId);
   if (spentToday + usdEquivalent > policy.dailyCapUsd) {
-    throw new Error(
+    violate(
       `Policy violation: this send would bring agent "${agentId}"'s rolling ` +
       `24h total to ${(spentToday + usdEquivalent).toFixed(2)} USD, exceeding ` +
       `the daily cap of ${policy.dailyCapUsd} USD.`
     );
   }
 
+  const org = orgFor(agentId);
+  if (org && org.orgDailyCapUsd != null) {
+    const orgSpentToday = orgDailySpendUsd(org.orgId);
+    if (orgSpentToday + usdEquivalent > org.orgDailyCapUsd) {
+      violate(
+        `Policy violation: this send would bring org "${org.orgId}"'s rolling ` +
+        `24h total to ${(orgSpentToday + usdEquivalent).toFixed(2)} USD, exceeding ` +
+        `the org daily cap of ${org.orgDailyCapUsd} USD.`
+      );
+    }
+  }
+
   const requiresConfirmation = usdEquivalent >= policy.confirmationFloorUsd;
   if (requiresConfirmation && !confirmed) {
+    alerts.notify('confirmation_required', { agentId, asset, usdEquivalent, toAddress }, alertsCfg).catch(() => {});
     const err = new Error(
       `This payment of ~${usdEquivalent} USD requires explicit human confirmation ` +
       `(pass confirmed: true after human review) because it is at or above the ` +
@@ -103,4 +149,4 @@ function checkSend({ agentId, asset, usdEquivalent, toAddress, confirmed }) {
   return { requiresConfirmation };
 }
 
-module.exports = { policyFor, dailySpendUsd, checkSend, loadPolicy };
+module.exports = { policyFor, dailySpendUsd, orgFor, orgDailySpendUsd, checkSend, loadPolicy };

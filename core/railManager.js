@@ -14,6 +14,9 @@ const xmr = require('./rails/xmr');
 const zec = require('./rails/zec');
 const limits = require('./limits');
 const ledger = require('./ledger');
+const priceFeed = require('./priceFeed');
+const fees = require('./fees');
+const balances = require('./balances');
 
 // Map each supported asset symbol to its adapter and how to call it.
 const RAIL_MAP = {
@@ -57,11 +60,20 @@ async function getBalance(asset) {
  */
 async function priceUsd(asset) {
   const policy = limits.loadPolicy();
+
+  try {
+    const livePrice = await priceFeed.getPrice(asset, policy);
+    if (livePrice !== null) return livePrice;
+  } catch (err) {
+    console.warn(`Live price feed failed for ${asset}, falling back to static price: ${err.message}`);
+  }
+
   const staticPrice = (policy.staticPricesUsd || {})[asset];
   if (staticPrice === undefined) {
     throw new Error(
-      `No USD price configured for ${asset}. Add it to config.json under ` +
-      `staticPricesUsd, or wire in a live price feed in railManager.priceUsd().`
+      `No USD price available for ${asset}. Live price feed failed (or is ` +
+      `disabled) and no static fallback is configured in config.json under ` +
+      `staticPricesUsd.`
     );
   }
   return staticPrice;
@@ -102,6 +114,18 @@ async function sendPayment({
     confirmed,
   });
 
+  // Custodial mode: debit the developer's deposited USDC balance for the
+  // send amount PLUS Aumnium's fee, BEFORE any funds move on-chain. If the
+  // balance is insufficient, this throws and nothing gets sent. Self-hosted
+  // (non-custodial) deployments leave custodialMode unset/false and skip
+  // this entirely, matching the original non-custodial design.
+  const policy = limits.loadPolicy();
+  let feeBreakdown = null;
+  if (policy.custodialMode) {
+    feeBreakdown = await fees.computeFee({ asset, usdEquivalent, policy });
+    balances.debitBalance({ agentId, totalUsdc: usdEquivalent + feeBreakdown.totalFeeUsd });
+  }
+
   const { adapter, ethLike } = RAIL_MAP[asset];
   const result = ethLike
     ? await adapter.send({ to, amount, asset, memo })
@@ -115,7 +139,12 @@ async function sendPayment({
     usdEquivalent,
     txId: result.txId,
     requiredConfirmation: requiresConfirmation,
+    fee: feeBreakdown,
   });
+
+  const alerts = require('./alerts');
+  const cfg = limits.loadPolicy();
+  alerts.notify('send_success', { agentId, asset, amount, to, txId: result.txId }, cfg.alerts).catch(() => {});
 
   return { idempotent: false, ...record };
 }
