@@ -101,39 +101,6 @@ curl -X POST -H "x-api-key: YOUR_KEY" -H "Content-Type: application/json" \
 Contact team@spacenet.network for an API key. Full endpoint list at
 [https://api.aumnium.tech](https://api.aumnium.tech).
 
-## Hosted (custodial) — skip the setup
-
-Don't want to run your own node? Aumnium operates a hosted instance at
-**https://api.aumnium.tech** — deposit USDC, get a spendable custodial
-balance, and start sending across all seven rails without installing or
-funding anything yourself.
-
-This is a **different trust model** than the self-hosted instructions
-above: your funds sit in a pooled wallet operated by Aumnium (not your
-own keys), and each send is charged a 1% fee plus network cost, deducted
-from your balance. The self-hosted path above remains fully non-custodial;
-this hosted path trades that for convenience.
-
-```bash
-# 1. Get your deposit address
-curl -H "x-api-key: YOUR_KEY" https://api.aumnium.tech/v1/deposit/address
-
-# 2. Send USDC to that address on Ethereum mainnet
-
-# 3. Claim your deposit once it confirms
-curl -X POST -H "x-api-key: YOUR_KEY" -H "Content-Type: application/json" \
-  -d \'{"txHash":"0x..."}\' \
-  https://api.aumnium.tech/v1/deposit/claim
-
-# 4. Send payments (billed per-call via x402, USDC on Base)
-curl -X POST -H "x-api-key: YOUR_KEY" -H "Content-Type: application/json" \
-  -d \'{"asset":"USDC","to":"0x...","amount":1,"idempotencyKey":"unique-key"}\' \
-  https://api.aumnium.tech/v1/send
-```
-
-Contact team@spacenet.network for an API key. Full endpoint list at
-[https://api.aumnium.tech](https://api.aumnium.tech).
-
 ## Where to go next
 
 - [`docs/SETUP_LINUX.md`](docs/SETUP_LINUX.md)
