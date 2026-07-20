@@ -75,6 +75,33 @@ function requireAdminAuth(req, res, next) {
 
 // --- Routes ------------------------------------------------------------
 
+app.get('/', (req, res) => {
+  res.json({
+    service: 'agentic-pay',
+    description: 'Hosted, custodial payment engine for AI agents. Deposit USDC, get a spendable balance, send across 7 crypto rails via REST or MCP.',
+    docs: 'https://github.com/ShieldCubed/agentic-pay',
+    website: 'https://aumnium.tech/agentic-pay',
+    supportedRails: ['BTC', 'ETH', 'USDT', 'USDC', 'XRP', 'XMR', 'ZEC'],
+    gettingStarted: {
+      step1: 'Contact us for an API key (see website)',
+      step2: 'GET /v1/deposit/address to get the USDC deposit address',
+      step3: 'Send USDC to that address on Ethereum mainnet',
+      step4: 'POST /v1/deposit/claim with your transaction hash to credit your balance',
+      step5: 'POST /v1/send to send payments — pay-per-call via x402 (USDC on Base)',
+    },
+    endpoints: {
+      'GET /v1/rails': 'List supported assets',
+      'GET /v1/address/:asset': 'Get receiving address (x402)',
+      'GET /v1/balance/:asset': 'Check balance (x402)',
+      'GET /v1/balance-custodial': 'Check custodial USDC balance',
+      'GET /v1/deposit/address': 'Get USDC deposit address',
+      'POST /v1/deposit/claim': 'Claim a deposit by tx hash',
+      'POST /v1/invoice': 'Create invoice (x402)',
+      'POST /v1/send': 'Send payment (x402)',
+    },
+  });
+});
+
 app.get('/v1/rails', (req, res) => {
   res.json({ supported: rails.SUPPORTED_ASSETS });
 });
