@@ -23,17 +23,17 @@ const { HTTPFacilitatorClient } = require('@x402/core/server');
 
 const PAY_TO = '0x33f765ff1ff70A19be91c4ADEE62ee16Da46b866';
 const facilitatorClient = new HTTPFacilitatorClient({
-  url: process.env.X402_FACILITATOR_URL || 'https://x402.org/facilitator',
+  url: process.env.X402_FACILITATOR_URL || 'https://facilitator.xpay.sh',
 });
 const resourceServer = new x402ResourceServer(facilitatorClient)
-  .register('eip155:84532', new ExactEvmScheme()); // Base Sepolia (testnet)
+  .register('eip155:8453', new ExactEvmScheme()); // Base mainnet
 
 app.use(paymentMiddleware(
   {
-    'GET /v1/address/:asset': { accepts: { scheme: 'exact', price: '$0.001', network: 'eip155:84532', payTo: PAY_TO }, description: 'Get receiving address' },
-    'GET /v1/balance/:asset': { accepts: { scheme: 'exact', price: '$0.001', network: 'eip155:84532', payTo: PAY_TO }, description: 'Check balance' },
-    'POST /v1/invoice':       { accepts: { scheme: 'exact', price: '$0.005', network: 'eip155:84532', payTo: PAY_TO }, description: 'Create invoice' },
-    'POST /v1/send':          { accepts: { scheme: 'exact', price: '$0.01',  network: 'eip155:84532', payTo: PAY_TO }, description: 'Send payment' },
+    'GET /v1/address/:asset': { accepts: { scheme: 'exact', price: '$0.001', network: 'eip155:8453', payTo: PAY_TO }, description: 'Get receiving address' },
+    'GET /v1/balance/:asset': { accepts: { scheme: 'exact', price: '$0.001', network: 'eip155:8453', payTo: PAY_TO }, description: 'Check balance' },
+    'POST /v1/invoice':       { accepts: { scheme: 'exact', price: '$0.005', network: 'eip155:8453', payTo: PAY_TO }, description: 'Create invoice' },
+    'POST /v1/send':          { accepts: { scheme: 'exact', price: '$0.01',  network: 'eip155:8453', payTo: PAY_TO }, description: 'Send payment' },
   },
   resourceServer,
 ));
