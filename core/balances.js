@@ -51,7 +51,7 @@ function getBalance(agentId) {
  * even if this function is called multiple times for it (e.g. a webhook
  * retry, or polling that sees the same confirmed tx more than once).
  */
-function creditDeposit({ agentId, amountUsdc, depositTxId }) {
+function creditDeposit({ agentId, amountUsdc, depositTxId, asset = 'USDC' }) {
   if (!depositTxId) throw new Error('depositTxId is required for every credit (prevents duplicate credits).');
   const db = read();
 
@@ -63,6 +63,7 @@ function creditDeposit({ agentId, amountUsdc, depositTxId }) {
   db.deposits[depositTxId] = {
     agentId,
     amountUsdc,
+    asset,
     creditedAt: new Date().toISOString(),
   };
   write(db);

@@ -17,6 +17,7 @@ const balances = require('./balances');
 
 const ERC20_TRANSFER_ABI = ['event Transfer(address indexed from, address indexed to, uint256 value)'];
 const DEFAULT_USDC_MAINNET = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
+const DEFAULT_USDT_MAINNET = '0xdAC17F958D2ee523a2206206994597C13D831ec';
 
 const MIN_CONFIRMATIONS = 2;
 
@@ -26,6 +27,22 @@ function provider() {
 
 function usdcAddress() {
   return loadOptional('USDC_CONTRACT_ADDRESS', DEFAULT_USDC_MAINNET);
+}
+
+function usdtAddress() {
+  return loadOptional('USDT_CONTRACT_ADDRESS', DEFAULT_USDT_MAINNET);
+}
+
+/**
+ * Returns [{ symbol, address }] for every stablecoin this deposit flow
+ * accepts. Both are treated as ~1:1 USD for custodial balance purposes,
+ * matching staticPricesUsd in config.json (USDT: 1, USDC: 1).
+ */
+function acceptedTokens() {
+  return [
+    { symbol: 'USDC', address: usdcAddress() },
+    { symbol: 'USDT', address: usdtAddress() },
+  ];
 }
 
 function depositWalletAddress() {
@@ -55,13 +72,15 @@ async function verifyAndCreditDeposit({ agentId, txHash }) {
     );
   }
 
-  const usdc = usdcAddress();
+  const tokens = acceptedTokens();
   const depositTarget = depositWalletAddress();
   const iface = new ethers.Interface(ERC20_TRANSFER_ABI);
 
   let matchedAmount = null;
+  let matchedSymbol = null;
   for (const log of receipt.logs) {
-    if (log.address.toLowerCase() !== usdc.toLowerCase()) continue;
+    const token = tokens.find((t) => t.address.toLowerCase() === log.address.toLowerCase());
+    if (!token) continue;
     let parsed;
     try {
       parsed = iface.parseLog(log);
@@ -72,12 +91,14 @@ async function verifyAndCreditDeposit({ agentId, txHash }) {
     if (parsed.args.to.toLowerCase() !== depositTarget.toLowerCase()) continue;
 
     matchedAmount = parsed.args.value;
+    matchedSymbol = token.symbol;
     break;
   }
 
   if (matchedAmount === null) {
+    const symbols = tokens.map((t) => t.symbol).join('/');
     throw new Error(
-      `Transaction ${txHash} does not contain a USDC transfer to the ` +
+      `Transaction ${txHash} does not contain a ${symbols} transfer to the ` +
       `deposit address (${depositTarget}). Wrong token, wrong recipient, ` +
       `or wrong transaction.`
     );
@@ -85,8 +106,8 @@ async function verifyAndCreditDeposit({ agentId, txHash }) {
 
   const amountUsdc = Number(ethers.formatUnits(matchedAmount, 6));
 
-  const result = balances.creditDeposit({ agentId, amountUsdc, depositTxId: txHash });
-  return { ...result, amountUsdc, depositAddress: depositTarget };
+  const result = balances.creditDeposit({ agentId, amountUsdc, depositTxId: txHash, asset: matchedSymbol });
+  return { ...result, amountUsdc, asset: matchedSymbol, depositAddress: depositTarget };
 }
 
 module.exports = { verifyAndCreditDeposit, depositWalletAddress };
